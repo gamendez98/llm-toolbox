@@ -12,6 +12,9 @@ from collections import Counter
 from functools import partial
 from pathlib import Path
 from typing import Any, Optional, Union
+from dotenv import load_dotenv
+
+load_dotenv()
 
 import polars as pl
 from tqdm import tqdm

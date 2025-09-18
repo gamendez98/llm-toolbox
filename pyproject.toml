@@ -37,3 +37,8 @@ dependencies = [
     "typing-extensions==4.12.2",
     "vertexai==1.49.0",
 ]
+
+[dependency-groups]
+dev = [
+    "seaborn>=0.13.2",
+]

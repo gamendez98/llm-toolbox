@@ -32,11 +32,14 @@ from tool_sandbox.roles.openai_api_agent import (
     GPT_3_5_0125_Agent,
     GPT_4_0125_Agent,
     GPT_4_o_2024_05_13_Agent,
+    Uniandes_GPT_4_o_2024_05_13_Agent,
 )
 from tool_sandbox.roles.openai_api_user import (
     GPT_3_5_0125_User,
     GPT_4_0125_User,
     GPT_4_o_2024_05_13_User,
+    Uniandes_GPT_4_o_2024_05_13_User,
+
 )
 from tool_sandbox.roles.unhelpful_agent import UnhelpfulAgent
 from tool_sandbox.scenarios import named_scenarios
@@ -48,6 +51,7 @@ class RoleImplType(StrEnum):
     GPT_3_5_0125 = auto()
     GPT_4_0125 = auto()
     GPT_4_o_2024_05_13 = auto()
+    Uniandes_GPT_4_o_2024_05_13 = auto()
     Claude_3_Opus = auto()
     Claude_3_Sonnet = auto()
     Claude_3_Haiku = auto()
@@ -75,6 +79,7 @@ AGENT_TYPE_TO_FACTORY: dict[RoleImplType, Callable[..., BaseRole]] = {
     RoleImplType.GPT_3_5_0125: GPT_3_5_0125_Agent,
     RoleImplType.GPT_4_0125: GPT_4_0125_Agent,
     RoleImplType.GPT_4_o_2024_05_13: GPT_4_o_2024_05_13_Agent,
+    RoleImplType.Uniandes_GPT_4_o_2024_05_13: Uniandes_GPT_4_o_2024_05_13_Agent,
     RoleImplType.Claude_3_Opus: ClaudeOpusAgent,
     RoleImplType.Claude_3_Sonnet: ClaudeSonnetAgent,
     RoleImplType.Claude_3_Haiku: ClaudeHaikuAgent,
@@ -97,6 +102,7 @@ USER_TYPE_TO_FACTORY: dict[RoleImplType, Callable[..., BaseRole]] = {
     RoleImplType.GPT_3_5_0125: GPT_3_5_0125_User,
     RoleImplType.GPT_4_0125: GPT_4_0125_User,
     RoleImplType.GPT_4_o_2024_05_13: GPT_4_o_2024_05_13_User,
+    RoleImplType.Uniandes_GPT_4_o_2024_05_13: Uniandes_GPT_4_o_2024_05_13_User,
     RoleImplType.Cli: CliUser,
 }
 

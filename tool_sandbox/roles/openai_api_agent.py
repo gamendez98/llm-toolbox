@@ -1,10 +1,11 @@
 # For licensing see accompanying LICENSE file.
 # Copyright (C) 2024 Apple Inc. All Rights Reserved.
 """Agent role for any model that conforms to OpenAI tool use API"""
-
+import os
 from typing import Any, Iterable, List, Literal, Optional, Union, cast
 
 from openai import NOT_GIVEN, NotGiven, OpenAI
+from openai.lib.azure import AzureOpenAI
 from openai.types.chat import (
     ChatCompletion,
     ChatCompletionMessageParam,
@@ -39,7 +40,12 @@ class OpenAIAPIAgent(BaseRole):
         # We set the `base_url` explicitly here to avoid picking up the
         # `OPENAI_BASE_URL` environment variable that may be set for serving models as
         # OpenAI API compatible servers.
-        self.openai_client: OpenAI = OpenAI(base_url="https://api.openai.com/v1")
+        self.openai_client: OpenAI = self.build_openai_client()
+
+    @classmethod
+    def build_openai_client(cls) -> OpenAI:
+        """Builds OpenAI client"""
+        return OpenAI(base_url="https://api.openai.com/v1")
 
     def respond(self, ending_index: Optional[int] = None) -> None:
         """Reads a List of messages and attempt to respond with a Message
@@ -74,7 +80,7 @@ class OpenAIAPIAgent(BaseRole):
         openai_tools = (
             convert_to_openai_tools(available_tools)
             if messages[-1].sender == RoleType.USER
-            or messages[-1].sender == RoleType.EXECUTION_ENVIRONMENT
+               or messages[-1].sender == RoleType.EXECUTION_ENVIRONMENT
             else NOT_GIVEN
         )
         # We need a cast here since `convert_to_openai_tool` returns a plain dict, but
@@ -133,14 +139,14 @@ class OpenAIAPIAgent(BaseRole):
         retry=retry_if_exception_type(HTTPError),
     )
     def model_inference(
-        self,
-        openai_messages: list[
-            dict[
-                Literal["role", "content", "tool_call_id", "name", "tool_calls"],
-                Any,
-            ]
-        ],
-        openai_tools: Union[Iterable[ChatCompletionToolParam], NotGiven],
+            self,
+            openai_messages: list[
+                dict[
+                    Literal["role", "content", "tool_call_id", "name", "tool_calls"],
+                    Any,
+                ]
+            ],
+            openai_tools: Union[Iterable[ChatCompletionToolParam], NotGiven],
     ) -> ChatCompletion:
         """Run OpenAI model inference
 
@@ -152,11 +158,12 @@ class OpenAIAPIAgent(BaseRole):
             OpenAI API chat completion object
         """
         with all_logging_disabled():
-            return self.openai_client.chat.completions.create(
+            completion = self.openai_client.chat.completions.create(
                 model=self.model_name,
                 messages=cast(list[ChatCompletionMessageParam], openai_messages),
                 tools=openai_tools,
             )
+            return completion
 
 
 class GPT_4_0125_Agent(OpenAIAPIAgent):
@@ -169,3 +176,17 @@ class GPT_3_5_0125_Agent(OpenAIAPIAgent):
 
 class GPT_4_o_2024_05_13_Agent(OpenAIAPIAgent):
     model_name = "gpt-4o-2024-05-13"
+
+
+class Uniandes_GPT_4_o_2024_05_13_Agent(OpenAIAPIAgent):
+    model_name = "gpt"
+    base_url = "https://invuniandesai-2.openai.azure.com/"
+
+    @classmethod
+    def build_openai_client(cls) -> OpenAI:
+        """Builds OpenAI client"""
+        return AzureOpenAI(
+            azure_endpoint="https://invuniandesai-2.openai.azure.com/",
+            api_version="2024-12-01-preview",
+            api_key=os.getenv("AZURE_OPENAI_API_KEY", "EMPTY")
+        )

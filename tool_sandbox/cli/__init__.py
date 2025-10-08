@@ -34,7 +34,7 @@ from tool_sandbox.common.execution_context import ScenarioCategories
 from tool_sandbox.common.scenario import Scenario
 from tool_sandbox.common.tool_discovery import ToolBackend
 
-DEFAULT_USER_TYPE = RoleImplType.GPT_4_o_2024_05_13
+DEFAULT_USER_TYPE = RoleImplType.Uniandes_GPT_4_o_2024_05_13
 
 
 def get_git_sha() -> Optional[str]:
@@ -203,7 +203,7 @@ def main() -> None:
     parser.add_argument(
         "--agent",
         help="Agent type.",
-        default="GPT_4_o_2024_05_13",
+        default="Uniandes_GPT_4_o_2024_05_13",
         choices=[str(t) for t in AGENT_TYPE_TO_FACTORY.keys()],
     )
     parser.add_argument(

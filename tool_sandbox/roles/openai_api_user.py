@@ -1,11 +1,12 @@
 # For licensing see accompanying LICENSE file.
 # Copyright (C) 2024 Apple Inc. All Rights Reserved.
 """Simulated user role for any model that conforms to OpenAI tool use API"""
-
+import os
 from logging import getLogger
 from typing import Dict, Iterable, List, Literal, Optional, Union, cast
 
 from openai import NOT_GIVEN, NotGiven, OpenAI
+from openai.lib.azure import AzureOpenAI
 from openai.types.chat import (
     ChatCompletion,
     ChatCompletionMessageParam,
@@ -31,11 +32,17 @@ class OpenAIAPIUser(BaseRole):
     role_type: RoleType = RoleType.USER
     model_name: str
 
-    def __init__(self) -> None:
+    def __init__(self, base_url: str = None, api_key: str = None) -> None:
         # We set the `base_url` explicitly here to avoid picking up the
         # `OPENAI_BASE_URL` environment variable that may be set for serving models as
         # OpenAI API compatible servers.
-        self.openai_client: OpenAI = OpenAI(base_url="https://api.openai.com/v1")
+        self.openai_client: OpenAI = self.build_openai_client()
+
+
+    @classmethod
+    def build_openai_client(cls) -> OpenAI:
+        """Builds OpenAI client"""
+        return OpenAI(base_url="https://api.openai.com/v1")
 
     def respond(self, ending_index: Optional[int] = None) -> None:
         """Reads a List of messages and attempt to respond with a Message
@@ -137,11 +144,15 @@ class OpenAIAPIUser(BaseRole):
             OpenAI API chat completion object
         """
         with all_logging_disabled():
-            return self.openai_client.chat.completions.create(
-                model=self.model_name,
-                messages=cast(list[ChatCompletionMessageParam], openai_messages),
-                tools=openai_tools,
-            )
+            try:
+                completion = self.openai_client.chat.completions.create(
+                    model=self.model_name,
+                    messages=cast(list[ChatCompletionMessageParam], openai_messages),
+                    tools=openai_tools,
+                )
+            except Exception as e:
+                raise
+            return completion
 
     @staticmethod
     def to_openai_messages(
@@ -198,3 +209,17 @@ class GPT_4_0125_User(OpenAIAPIUser):
 
 class GPT_4_o_2024_05_13_User(OpenAIAPIUser):
     model_name = "gpt-4o-2024-05-13"
+
+
+class Uniandes_GPT_4_o_2024_05_13_User(OpenAIAPIUser):
+    model_name = "gpt"
+
+    @classmethod
+    def build_openai_client(cls) -> OpenAI:
+        """Builds OpenAI client"""
+        return AzureOpenAI(
+            azure_endpoint="https://invuniandesai-2.openai.azure.com/",
+            api_version="2024-12-01-preview",
+            api_key=os.getenv("AZURE_OPENAI_API_KEY", "EMPTY")
+        )
+
